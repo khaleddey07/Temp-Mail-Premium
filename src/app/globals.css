@@ -1,0 +1,230 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg: #f6f7fb;
+  --bg-soft: #ffffff;
+  --bg-muted: #eef1f7;
+  --border: #e4e8f2;
+  --text: #0f172a;
+  --text-muted: #5b6577;
+  --text-faint: #94a3b8;
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --accent: #8b5cf6;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --card-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
+  --card-shadow-lg: 0 24px 64px rgba(99, 102, 241, 0.14);
+  --glass: rgba(255, 255, 255, 0.72);
+}
+
+.dark {
+  --bg: #070b18;
+  --bg-soft: #0c1226;
+  --bg-muted: #131a33;
+  --border: #1e2745;
+  --text: #f1f5f9;
+  --text-muted: #a3aec4;
+  --text-faint: #5d6b8a;
+  --primary: #818cf8;
+  --primary-hover: #a5b4fc;
+  --accent: #a78bfa;
+  --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --card-shadow-lg: 0 24px 64px rgba(99, 102, 241, 0.22);
+  --glass: rgba(12, 18, 38, 0.72);
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+/* ---------- Background decor ---------- */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgb(99 102 241 / 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(99 102 241 / 0.07) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, black 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, black 40%, transparent 100%);
+}
+
+.bg-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  pointer-events: none;
+  opacity: 0.5;
+}
+.dark .bg-orb {
+  opacity: 0.28;
+}
+
+/* ---------- Glass & cards ---------- */
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+}
+
+.card {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  box-shadow: var(--card-shadow);
+}
+
+.card-hover {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--card-shadow-lg);
+  border-color: rgb(99 102 241 / 0.35);
+}
+
+/* ---------- Gradient text & buttons ---------- */
+.gradient-text {
+  background: linear-gradient(120deg, #6366f1, #a855f7 55%, #ec4899);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
+  transition: all 0.25s ease;
+}
+.btn-primary:hover {
+  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.5);
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+.btn-primary:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* ---------- Animations ---------- */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(32px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes pop-in {
+  0% { opacity: 0; transform: scale(0.92) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(0.82); }
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+@keyframes tick {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+.animate-fade-up { animation: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-fade-in { animation: fade-in 0.5s ease both; }
+.animate-slide-in-right { animation: slide-in-right 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-pop-in { animation: pop-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-toast-in { animation: toast-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-float-slow { animation: float-slow 6s ease-in-out infinite; }
+.animate-pulse-dot { animation: pulse-dot 1.6s ease-in-out infinite; }
+.animate-tick { animation: tick 0.4s ease; }
+
+.stagger-1 { animation-delay: 0.06s; }
+.stagger-2 { animation-delay: 0.12s; }
+.stagger-3 { animation-delay: 0.18s; }
+.stagger-4 { animation-delay: 0.24s; }
+.stagger-5 { animation-delay: 0.3s; }
+.stagger-6 { animation-delay: 0.36s; }
+
+/* ---------- Skeleton ---------- */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-muted) 25%, var(--border) 50%, var(--bg-muted) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.6s infinite linear;
+  border-radius: 8px;
+}
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgb(99 102 241 / 0.3);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgb(99 102 241 / 0.55); }
+
+/* ---------- Inbox ---------- */
+.message-row {
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+.message-row:hover {
+  background: rgb(99 102 241 / 0.06);
+}
+.message-row.active {
+  background: rgb(99 102 241 / 0.1);
+  border-color: rgb(99 102 241 / 0.4) !important;
+}
+.dark .message-row:hover { background: rgb(129 140 248 / 0.08); }
+.dark .message-row.active { background: rgb(129 140 248 / 0.12); }
+
+/* ---------- Countdown ring ---------- */
+.countdown-ring {
+  transition: stroke-dashoffset 1s linear;
+}
+
+/* ---------- Email body ---------- */
+.email-body iframe { border: 0; width: 100%; min-height: 420px; background: #fff; border-radius: 12px; }
+
+/* ---------- Toast ---------- */
+.toast-shadow { box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18); }
+
+/* ---------- Focus ---------- */
+:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+::selection {
+  background: rgb(99 102 241 / 0.25);
+}

@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Adresse e-mail temporaire réelle (compte mail.tm) liée à un jeton anonyme navigateur
+model TempAddress {
+  id               String    @id @default(uuid())
+  email            String    @unique
+  localPart        String
+  domain           String
+  token            String    @unique
+  // Identifiants du compte mail.tm sous-jacent (jamais exposés au client)
+  providerId       String?
+  providerPassword String?
+  providerToken    String?
+  providerTokenAt  DateTime?
+  expiresAt        DateTime
+  createdAt        DateTime  @default(now())
+  extendedCount    Int       @default(0)
+  lastAccessedAt   DateTime  @default(now())
+
+  messages Message[]
+
+  @@index([expiresAt])
+  @@index([email])
+}
+
+// Cache local des messages (source de vérité : mail.tm, synchronisé à chaque lecture)
+model Message {
+  id             String      @id @default(uuid())
+  addressId      String
+  address        TempAddress @relation(fields: [addressId], references: [id], onDelete: Cascade)
+  providerMsgId  String? // id du message chez mail.tm (null = message local de bienvenue)
+  senderName     String
+  senderEmail    String
+  subject        String
+  preview        String
+  isRead         Boolean     @default(false)
+  hasAttachments Boolean     @default(false)
+  receivedAt     DateTime
+  sizeBytes      Int         @default(0)
+
+  @@unique([addressId, providerMsgId])
+  @@index([addressId])
+  @@index([receivedAt])
+}
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  createdAt DateTime @default(now())
+}
