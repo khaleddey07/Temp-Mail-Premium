@@ -1,10 +1,25 @@
 /**
- * Client mail.tm côté serveur — réception de VRAIS e-mails.
- * Aucune clé secrète : mail.tm est une API publique (8 req/s max par IP).
+ * Client multi-fournisseurs côté serveur — réception de VRAIS e-mails.
+ * mail.tm en principal, bascule automatique vers le(s) fournisseur(s) de
+ * secours (API identique) si le premier est injoignable depuis notre
+ * hébergeur (blocage réseau / IP datacenter). Aucune clé secrète.
  * Toutes les fonctions gèrent : re-auth automatique (401), retry 429/5xx.
  */
 
-const API = "https://api.mail.tm";
+/** Fournisseurs essayés dans l'ordre — surchargeable via MAIL_PROVIDERS (virgules). */
+const PROVIDERS: string[] = (
+  process.env.MAIL_PROVIDERS?.trim() || "https://api.mail.tm,https://api.mail.gw"
+)
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+/** Base mémorisée dès qu'un fournisseur répond correctement. */
+let activeApi: string | null = null;
+
+/** User-Agent identifié — certains CDN refusent les requêtes sans UA depuis des IP datacenter. */
+const UA =
+  "Mozilla/5.0 (compatible; TempMailPremium/1.0; +https://temp-mail-premium.vercel.app)";
 
 /* ================= Types ================= */
 export interface MtDomain {
@@ -40,31 +55,57 @@ export interface MtMessageFull extends MtMessageSummary {
   attachments?: MtAttachment[];
 }
 
-/* ================= Fetch robuste (retry 429 / 5xx) ================= */
-async function mtFetch(path: string, init: RequestInit = {}, retries = 2): Promise<Response> {
+/* ================= Fetch robuste (multi-fournisseurs, retry 429/5xx) ================= */
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+async function tryFetch(base: string, path: string, init: RequestInit): Promise<Response> {
+  return fetch(base + path, {
+    ...init,
+    headers: {
+      Accept: "application/json",
+      "User-Agent": UA,
+      ...(init.headers ?? {}),
+    },
+    signal: AbortSignal.timeout(10000),
+  });
+}
+
+async function mtFetch(path: string, init: RequestInit = {}, retries = 1): Promise<Response> {
+  // Le favori mémorisé est essayé en premier, puis les autres fournisseurs.
+  const bases = activeApi
+    ? [activeApi, ...PROVIDERS.filter((p) => p !== activeApi)]
+    : [...PROVIDERS];
   let lastRes: Response | null = null;
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      const res = await fetch(API + path, {
-        ...init,
-        headers: {
-          Accept: "application/json",
-          ...(init.headers ?? {}),
-        },
-        signal: AbortSignal.timeout(12000),
-      });
-      if (res.status === 429 || res.status >= 500) {
-        lastRes = res;
-        await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
-        continue;
+  let lastErr: unknown = null;
+
+  for (const base of bases) {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const res = await tryFetch(base, path, init);
+        if (res.status === 429 || res.status >= 500) {
+          // Trop de requêtes / panne : réessai court, puis fournisseur suivant.
+          lastRes = res;
+          lastErr = null;
+          if (attempt < retries) await sleep(600 * (attempt + 1));
+          continue;
+        }
+        activeApi = base; // succès → ce fournisseur devient prioritaire
+        return res;
+      } catch (err) {
+        // Erreur réseau / timeout → fournisseur suivant.
+        lastErr = err;
+        if (attempt < retries) await sleep(600 * (attempt + 1));
       }
-      return res;
-    } catch (err) {
-      if (attempt === retries) throw err;
-      await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
     }
+    if (activeApi === base) activeApi = null; // le favori ne répond plus → réouvrir la bascule
   }
-  return lastRes as Response;
+
+  if (lastRes) return lastRes;
+  throw lastErr instanceof Error
+    ? lastErr
+    : new Error("Aucun fournisseur mail joignable");
 }
 
 /* ================= Domaines (cache mémoire 10 min) ================= */
