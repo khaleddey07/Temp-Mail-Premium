@@ -1,14 +1,19 @@
 import { NextResponse } from "next/server";
-import { getActiveDomains } from "@/lib/mailtm";
+import { getActiveTargets } from "@/lib/mailtm";
 import { FALLBACK_DOMAINS } from "@/lib/temp-mail";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/domains -> domaines réellement actifs (mail.tm)
+const PROVIDER_LABEL: Record<string, string> = {
+  mailtm: "mail.tm",
+  guerrillamail: "guerrillamail",
+};
+
+// GET /api/domains -> domaines réellement actifs (premier fournisseur sain)
 export async function GET() {
   try {
-    const domains = await getActiveDomains();
-    return NextResponse.json({ domains, provider: "mail.tm" });
+    const { provider, domains } = await getActiveTargets();
+    return NextResponse.json({ domains, provider: PROVIDER_LABEL[provider] ?? provider });
   } catch {
     return NextResponse.json({ domains: FALLBACK_DOMAINS, provider: "fallback" });
   }

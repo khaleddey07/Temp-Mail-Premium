@@ -64,27 +64,17 @@ export interface CreateResult {
 }
 
 export async function createRealAddress(localPartRaw?: string, domainRaw?: string): Promise<CreateResult> {
-  // 1. Domaine réel actif
-  let domain: string;
-  try {
-    const actives = await mt.getActiveDomains();
-    domain = domainRaw && actives.includes(domainRaw) ? domainRaw : actives[0];
-  } catch {
-    return { error: "Fournisseur mail momentanément indisponible. Réessayez dans quelques secondes.", status: 503 };
-  }
-
-  // 2. Partie locale
+  // 1. Partie locale demandée (nettoyée) ou générée aléatoirement
   let base = (localPartRaw ?? "").trim().toLowerCase().replace(/[^a-z0-9._-]/g, "");
   if (!base || base.length < 3) base = generateLocalPart();
 
-  // 3. Création du compte réel (retry suffixe si déjà pris)
-  const password = mt.randomPassword();
-  let created: { id: string; address: string } | null = null;
+  // 2. Création chez le PREMIER fournisseur sain (mail.tm, sinon GuerrillaMail…)
+  //    Retry avec suffixe si le nom est déjà pris (mail.tm uniquement).
+  let created: mt.CreatedMailbox | null = null;
   let finalLocal = base;
   for (let i = 0; i < 4; i++) {
-    const candidate = `${finalLocal}@${domain}`;
     try {
-      created = await mt.createAccount(candidate, password);
+      created = await mt.createMailbox(finalLocal, domainRaw);
       break;
     } catch (e) {
       const msg = e instanceof Error ? e.message : "";
@@ -92,37 +82,29 @@ export async function createRealAddress(localPartRaw?: string, domainRaw?: strin
         finalLocal = `${base}${Math.floor(Math.random() * 900 + 100)}`;
         continue;
       }
-      return { error: "Impossible de créer l'adresse auprès du fournisseur. Réessayez.", status: 502 };
+      return { error: "Fournisseur mail momentanément indisponible. Réessayez dans quelques secondes.", status: 503 };
     }
   }
   if (!created) return { error: "Adresse déjà prise. Essayez un autre nom.", status: 409 };
 
-  // 4. Login
-  let providerToken: string | null = null;
-  try {
-    providerToken = await mt.login(created.address, password);
-  } catch {
-    providerToken = null; // le re-auth auto gèrera plus tard
-  }
-
-  // 5. Enregistrement local (TTL 60 min)
+  // 3. Enregistrement local (TTL 60 min) — providerId encodé selon fournisseur
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
   const token = generateTokenLocal();
   const address = await db.tempAddress.create({
     data: {
-      email: created.address,
-      localPart: finalLocal,
-      domain,
+      email: created.email,
+      localPart: created.local,
+      domain: created.domain,
       token,
-      providerId: created.id,
-      providerPassword: password,
-      providerToken,
-      providerTokenAt: providerToken ? new Date() : null,
+      providerId: created.providerId,
+      providerPassword: created.password,
+      providerToken: created.token,
+      providerTokenAt: created.token ? new Date() : null,
       expiresAt,
     },
   });
 
-  // 6. Messages de bienvenue (cache local uniquement)
+  // 4. Messages de bienvenue (cache local uniquement)
   await db.message.createMany({ data: welcomeMessages(address.id, address.email) });
   const count = await db.message.count({ where: { addressId: address.id } });
 
@@ -180,12 +162,18 @@ export async function syncMessages(address: TempAddress): Promise<{ ok: boolean;
         preview: m.intro || "",
         isRead: !!m.seen,
         hasAttachments: !!m.hasAttachments,
-        receivedAt: new Date(m.createdAt),
         sizeBytes: m.size ?? 0,
       };
       await db.message.upsert({
         where: { addressId_providerMsgId: { addressId: address.id, providerMsgId: m.id } },
-        create: { addressId: address.id, providerMsgId: m.id, ...data },
+        // receivedAt figé à la 1re apparition (stable pour GuerrillaMail, dont
+        // l'horodatage de bienvenue vaut 0) — isRead suit le fournisseur.
+        create: {
+          addressId: address.id,
+          providerMsgId: m.id,
+          ...data,
+          receivedAt: new Date(m.createdAt),
+        },
         update: data,
       });
     }

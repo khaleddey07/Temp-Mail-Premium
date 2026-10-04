@@ -247,6 +247,9 @@ export default function TempMailApp({ onAddressChange }: { onAddressChange?: () 
         setToken(data.address.token);
         localStorage.setItem("tempmail-token", data.address.token);
         await fetchMessages(data.address.id, data.address.token, { silent: true });
+      } else {
+        notify("error", "Création impossible", data.error ?? "Le service est momentanément indisponible. Rechargez la page dans quelques secondes.");
+        setLive(false);
       }
     } catch {
       notify("error", "Erreur de connexion", "Impossible de joindre le serveur. Réessayez.");
@@ -344,6 +347,8 @@ export default function TempMailApp({ onAddressChange }: { onAddressChange?: () 
         notify("success", "Nouvelle adresse créée", data.address.email);
         onAddressChange?.();
         setShowNew(false);
+      } else {
+        notify("error", "Création impossible", data.error ?? "Le fournisseur mail est momentanément indisponible. Réessayez dans quelques secondes.");
       }
     } catch {
       notify("error", "Erreur", "Impossible de créer une adresse.");
