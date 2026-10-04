@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "react-qr-code";
-import DOMPurify from "isomorphic-dompurify";
+import DOMPurify from "dompurify";
 import {
   Copy,
   Check,
