@@ -59,13 +59,14 @@ export default function AdSlot({ slot, format = "auto", minHeight = 110, classNa
   // Google AdSense : pousser l'unité dans la file (traitée au chargement du script)
   useEffect(() => {
     if (!useAdsense || asPushedRef.current || !asRef.current) return;
+    if (consent === null) return; // RGPD : attendre le choix du visiteur (NPA appliqué si « essentiel »)
     asPushedRef.current = true;
     try {
       (window.adsbygoogle = window.adsbygoogle || []).push({});
     } catch {
       /* le script pas encore chargé : la file sera traitée automatiquement */
     }
-  }, [useAdsense]);
+  }, [useAdsense, consent]);
 
   // Bannière Adsterra : injectée dans une iframe isolée (compatible document.write)
   useEffect(() => {

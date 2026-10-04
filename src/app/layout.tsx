@@ -4,9 +4,11 @@ import "./globals.css";
 import { ThemeProvider, ToastProvider } from "@/components/providers";
 import { Header, Footer } from "@/components/site-chrome";
 import AdsManager from "@/components/ads/ads-manager";
+import { SITE_URL } from "@/lib/temp-mail";
+import { ADS_CONFIG, adsenseActive } from "@/config/ads";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://tempmail-premium.app"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "TempMail Premium — Adresse E-mail Temporaire Gratuite & Sécurisée",
     template: "%s | TempMail Premium",
@@ -33,7 +35,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "fr_FR",
-    url: "https://tempmail-premium.app",
+    url: SITE_URL,
     siteName: "TempMail Premium",
     title: "TempMail Premium — Adresse E-mail Temporaire Gratuite",
     description:
@@ -45,7 +47,7 @@ export const metadata: Metadata = {
     title: "TempMail Premium — E-mail temporaire gratuit",
     description: "Créez une adresse jetable en 1 seconde. Réception instantanée, zéro spam, 100% anonyme.",
   },
-  alternates: { canonical: "https://tempmail-premium.app" },
+  alternates: { canonical: SITE_URL },
   category: "technology",
 };
 
@@ -62,7 +64,7 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
   name: "TempMail Premium",
-  url: "https://tempmail-premium.app",
+  url: SITE_URL,
   applicationCategory: "UtilitiesApplication",
   operatingSystem: "Web",
   offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
@@ -81,6 +83,17 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
           rel="stylesheet"
         />
+        {/* Script Google AdSense — présent dans le HTML brut de TOUTES les pages
+            (exigé par Google pour la vérification du site). Injecté seulement
+            quand un identifiant éditeur est configuré dans src/config/ads.ts. */}
+        {adsenseActive() && (
+          <script
+            id="adsense-loader"
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADS_CONFIG.adsense.clientId.trim()}`}
+            crossOrigin="anonymous"
+          />
+        )}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         <script
           dangerouslySetInnerHTML={{

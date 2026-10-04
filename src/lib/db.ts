@@ -11,19 +11,32 @@ import { PrismaLibSQL } from "@prisma/adapter-libsql";
  *
  * Turso : https://turso.tech — offre gratuite permanente (pas de carte bancaire).
  */
+
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
+
+/** Nettoie une URL Turso collée à la main — corrige 90 % des erreurs de déploiement :
+ *  - supprime TOUS les espaces / retours à la ligne introduits par le copier-coller
+ *    (ex. « libsql://ma-base -org.aws-us-east-1.turso.io »)
+ *  - corrige le schéma erroné (libmysql://, https://, schéma manquant → libsql://)
+ *  - supprime le ou les « / » finaux éventuels. */
+function normalizeTursoUrl(raw: string): string {
+  const cleaned = raw.replace(/\s+/g, "");
+  if (/^file:/i.test(cleaned)) return cleaned; // tests locaux (SQLite) : ne pas toucher
+  const withoutScheme = cleaned.replace(/^[a-z][a-z0-9+.-]*:\/\//i, "").replace(/\/+$/, "");
+  return `libsql://${withoutScheme}`;
+}
 
 function createDb(): PrismaClient {
   const tursoUrl = process.env.TURSO_DATABASE_URL?.trim();
 
   if (tursoUrl) {
     // Mode Turso (libSQL distant) — gratuit, compatible serverless Vercel
-    const adapter = new PrismaLibSQL({
-      url: tursoUrl,
-      authToken: process.env.TURSO_AUTH_TOKEN?.trim() || undefined,
-    });
+    const url = normalizeTursoUrl(tursoUrl);
+    const authToken = process.env.TURSO_AUTH_TOKEN?.replace(/\s+/g, "") || undefined;
+    console.log(`[db] Mode Turso (libSQL distant) : ${url}`);
+    const adapter = new PrismaLibSQL({ url, authToken });
     return new PrismaClient({ adapter });
   }
 

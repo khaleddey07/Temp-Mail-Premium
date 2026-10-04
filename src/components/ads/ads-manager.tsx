@@ -9,8 +9,9 @@ import { useConsent } from "./use-consent";
 /**
  * Gestion centralisée de la monétisation :
  * 1. Bandeau de consentement RGPD (affiché seulement si une régie est configurée)
- * 2. Chargement du script Google AdSense APRÈS le choix du visiteur
- *    (refus → publicité non personnalisée via requestNonPersonalizedAds)
+ * 2. Le script AdSense est présent dans le <head> (layout.tsx) pour la vérification
+ *    du site par Google ; en cas de refus de personnalisation, NPA=1 est posé
+ *    AVANT le premier affichage d'annonce (requestNonPersonalizedAds)
  * 3. Scripts site-wide (Social Bar, Popunder…) uniquement si consentement complet
  * Aucun de ces mécanismes ne s'active tant que src/config/ads.ts est vide.
  */

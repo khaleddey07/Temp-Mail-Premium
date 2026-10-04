@@ -1,131 +1,117 @@
-# 🚀 GUIDE DE DÉPLOIEMENT GRATUIT — TempMail Premium
+# 🚀 GUIDE DE DÉPLOIEMENT — TempMail Premium (Vercel + Turso)
 
-> Objectif : mettre votre site en ligne 100 % GRATUITEMENT sur une adresse
-> `https://votre-site.vercel.app` fonctionnelle 24 h/24, avec vraie réception d'e-mails.
->
-> Vous avez déjà créé les 3 comptes : **GitHub**, **Turso**, **Vercel**. C'est parfait !
-> Suivez les 5 étapes ci-dessous, dans l'ordre. Comptez 20 à 30 minutes.
+> **Mise à jour du 4 octobre 2026** : ta base Turso est identifiée, testée et **déjà prête**
+> (les tables y ont été créées avec succès lors du test réel). Il ne reste que 2 choses à faire :
+> **1) uploader 6 fichiers sur GitHub, 2) corriger 3 variables sur Vercel.**
 
 ---
 
-## 📦 ÉTAPE 1 — Préparer les fichiers (2 min)
+## ✅ ÉTAPE 1 — Uploader 6 fichiers sur GitHub (5 min)
 
-1. Téléchargez le fichier **tempmail-premium-deploy.zip** (fourni dans la conversation).
-2. Clic droit sur le ZIP → **« Extraire tout... »** (Windows) ou double-clic (Mac).
-3. Ouvrez le dossier extrait : vous voyez des dossiers (`src`, `prisma`, `public`…)
-   et des fichiers (`package.json`, `README.md`…).
-4. **Laissez cette fenêtre ouverte**, vous en aurez besoin à l'étape 2.
+Le site est déjà en ligne sur GitHub/Vercel. On ne remplace QUE les fichiers modifiés.
 
----
+| Fichier téléchargé | Où le mettre sur GitHub (bouton « Add file → Upload files ») |
+|---|---|
+| `ads.ts` | `src/config/` (remplace l'existant) |
+| `layout.tsx` | `src/app/` (remplace l'existant) |
+| `ad-slot.tsx` | `src/components/ads/` (remplace l'existant) |
+| `db.ts` | `src/lib/` (remplace l'existant) |
+| `instrumentation.ts` | `src/` (remplace l'existant) |
+| `health-route.ts` | `src/app/api/health/` → **renomme-le `route.ts`** en le nommant avant de l'ajouter |
 
-## 🐙 ÉTAPE 2 — Envoyer le code sur GitHub (5 min)
-
-1. Allez sur **github.com** et connectez-vous.
-2. En haut à droite, cliquez sur le **« + »** → **« New repository »**.
-3. Repository name : `tempmail-premium` — Visible : **Public** — ne cochez rien d'autre.
-4. Cliquez **« Create repository »**.
-5. Sur la page qui s'affiche, cliquez le lien **« uploading an existing file »**.
-6. Dans votre dossier extrait (étape 1) : faites **Ctrl + A** (tout sélectionner),
-   puis **glissez-déposez** tous les fichiers dans la zone GitHub.
-7. Attendez que la barre de progression se termine (1–3 min), puis cliquez
-   **« Commit changes »**.
-
-✅ Votre code est maintenant sur GitHub à l'adresse
-`https://github.com/VOTRE-PSEUDO/tempmail-premium`
+> 💡 Astuce GitHub : va sur github.com → ton dépôt → navigue dans le bon dossier → « Add file » →
+> « Upload files » → glisse le fichier → « Commit changes ». Répète pour chaque dossier
+> (ou fais les 6 en une fois en respectsant les dossiers).
+> ⏱️ Dès le commit, Vercel redéploie automatiquement (2-3 min).
 
 ---
 
-## 🗄️ ÉTAPE 3 — Créer la base de données Turso (5 min)
+## 🔑 ÉTAPE 2 — Corriger les 3 variables d'environnement sur Vercel (3 min)
 
-Turso = base de données gratuite permanente (pas de carte bancaire demandée).
+Vercel → ton projet **temp-mail-premium** → **Settings → Environment Variables**.
 
-1. Allez sur **app.turso.tech** et connectez-vous (vous pouvez vous inscrire
-   avec votre compte GitHub).
-2. Cliquez **« Create Database »** (ou « New Database »).
-   - Name : `tempmail`
-   - Location : `Frankfurt` ou `Paris` (Europe)
-3. Une fois créée, cliquez sur la base `tempmail` :
-   - Copiez l'**URL** qui ressemble à `libsql://tempmail-votre-pseudo.turso.io`
-     → c'est votre **TURSO_DATABASE_URL** (gardez-la de côté).
-4. Créez le jeton d'accès : onglet **« Tokens »** (ou bouton « Generate Token »)
-   → cliquez **« Generate Token »** → copiez-le
-   → c'est votre **TURSO_AUTH_TOKEN** (gardez-le de côté).
-5. Créez les tables :
-   - Ouvrez le fichier `deploy/schema.sql` (dans le dossier extrait, avec le
-     Bloc-notes).
-   - Dans le tableau de bord Turso, onglet **« Edit Data »** (ou « Console » /
-     « SQL ») → collez TOUT le contenu du fichier → cliquez **Run / Execute**.
-   - Vous devez voir 3 tables apparaître : `TempAddress`, `Message`,
-     `ContactMessage`.
+C'est l'erreur 502/P2010 que tu voyais : l'URL Turso était mal recopiée
+(`libmysql://` avec un espace). Voici les **bonnes valeurs, testées et validées** :
 
-> 💡 Si l'onglet SQL n'apparaît pas dans le tableau de bord, dites-le moi,
-> je vous donnerai la méthode par terminal (2 commandes).
+| Nom | Valeur — copie-colle EXACTEMENT (sélectionne tout, clic droit, copier) |
+|---|---|
+| `TURSO_DATABASE_URL` | `libsql://tempmail-khaleddey.aws-us-east-1.turso.io` |
+| `TURSO_AUTH_TOKEN` | `eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3OTExMDk0NjgsImlkIjoiMDFhMTA2NmYtMjUwMS03ZGRhLThiZjItYmRjMjUwNTRhZWI5Iiwia2lkIjoiQWR1Wk15YlBrTkZONHFhS0JaS3U1NXZaT2t0dy1iYTlFY1lRN0EzMkVTcyIsInJpZCI6IjFlYTEwMDdjLTA5YmYtNDVhNi05YmI2LTQxY2FiNDNiY2IxNSJ9.QrMunFtaZJfHjfjEh-rYJrbsqbsP0ODNEWTJDMbMuZdIliYs_jAX4CR4p1DuQmifwAc1tHGZmxGp1npCPJQxDg` |
+| `NEXT_PUBLIC_SITE_URL` | `https://temp-mail-premium.vercel.app` |
 
----
+**Pour chaque variable** : colle le nom, colle la valeur, vérifie qu'il n'y a
+**aucun espace avant/après**, sauvegarde (Save).
 
-## ▲ ÉTAPE 4 — Déployer sur Vercel (5 min)
+> 📌 Le nouveau `db.ts` corrige automatiquement les espaces et le mauvais préfixe
+> (`libmysql://` → `libsql://`) : même si un copier-coller rate, ça passera quand même.
 
-1. Allez sur **vercel.com** et connectez-vous **avec GitHub** (« Continue with
-   GitHub ») → autorisez Vercel.
-2. Cliquez **« Add New... »** → **« Project »**.
-3. Dans la liste, trouvez `tempmail-premium` → cliquez **« Import »**.
-4. À l'étape « Configure Project », **avant de cliquer sur Deploy** :
-   ouvrez la section **« Environment Variables »** et ajoutez ces 3 variables
-   (Nom → Valeur) :
+### 🗺️ Région des fonctions Vercel — IMPORTANT
 
-   | Nom | Valeur |
-   |---|---|
-   | `TURSO_DATABASE_URL` | `libsql://tempmail-votre-pseudo.turso.io` (étape 3) |
-   | `TURSO_AUTH_TOKEN` | le long jeton copié à l'étape 3 |
-   | `DATABASE_URL` | `file:./db/custom.db` |
+Ta base Turso est en **Virginie, États-Unis** (aws-us-east-1) — pas à Francfort.
 
-   ⚠️ Copiez-collez SANS espaces avant/après les valeurs.
+Vercel → **Settings → Functions → Function Region** → choisis **Washington, D.C. (iad1 - Capital of the US)** → Save.
+La fonction et la base seront presque voisines → réponses **~4× plus rapides**.
 
-5. Cliquez **« Deploy »** → patientez 2 à 4 minutes.
+### 🚀 ÉTAPE 3 — Redeployer
 
-🎉 Vercel vous affiche **« Congratulations »** avec un bouton
-**« Continue to Dashboard »**. En haut de la page se trouve votre adresse :
+Vercel → **Deployments** → dernier déploiement → bouton **⋯** → **Redeploy** → Confirme.
+Attends ~2 min que le statut repasse au vert.
 
-**`https://tempmail-premium.vercel.app`** (ou similaire)
+### 🩺 ÉTAPE 4 — Vérifier en 30 secondes
+
+1. Ouvre **https://temp-mail-premium.vercel.app/api/health**
+   - `{"ok":true}` → ✅ **gagné, tout fonctionne**
+   - `{"ok":false, "reason":"…", "hint":"…"}` → le site t'explique LUI-MÊME quoi corriger
+     (URL de base ou token) — suis le champ « hint ».
+2. Ouvre le site, clique « Créer mon adresse », puis envoie-lui un e-mail depuis
+   Gmail — il arrive en quelques secondes.
 
 ---
 
-## 🌐 ÉTAPE 5 — Finaliser (3 min)
+## 🔍 DÉPANNAGE
 
-1. Ouvrez votre adresse `https://….vercel.app` dans le navigateur :
-   - Cliquez **« Nouvelle adresse »** → une vraie adresse e-mail s'affiche.
-   - Envoyez-lui un message depuis votre Gmail → il arrive en quelques secondes.
-2. **Ajoutez l'URL du site à sa propre configuration** (important pour le SEO) :
-   - Vercel → votre projet → **Settings** → **Environment Variables**.
-   - Ajoutez : Nom = `NEXT_PUBLIC_SITE_URL` →
-     Valeur = `https://tempmail-premium.vercel.app` (votre vraie URL).
-   - Puis onglet **Deployments** → clic sur les « ... » du déploiement du haut
-     → **« Redeploy »** → confirmez.
-3. **Envoyez-moi votre URL `….vercel.app` dans la conversation !**
-   Je vous guiderai ensuite pour :
-   - l'inscription à **Google Search Console** (gratuit, pour apparaître sur Google) ;
-   - l'activation des **publicités A-ADS / Adsterra** (acceptent les sites
-     hébergés gratuitement → premiers revenus) ;
-   - la suite AdSense quand vous aurez un domaine (~1 €/an, optionnel).
-
----
-
-## 🆘 Problèmes fréquents
-
-| Symptôme | Cause probable | Solution |
+| Symptôme | Cause | Solution |
 |---|---|---|
-| Le site affiche « Internal Server Error » ou erreur 500 | Variables Turso mal copiées | Vercel → Settings → Environment Variables : vérifiez `TURSO_DATABASE_URL` et `TURSO_AUTH_TOKEN` (sans espace), puis Redeploy |
-| « Nouvelle adresse » ne fonctionne pas | Tables non créées sur Turso | Refaites l'étape 3.5 (coller `deploy/schema.sql`) |
-| Erreur de build sur Vercel | Dépôt GitHub incomplet | Vérifiez que `src/`, `prisma/`, `package.json` et `bun.lock` sont bien visibles sur github.com |
-| Le site s'affiche mais « Build failed » | Fichier manquant au dépôt | Ré-uploadez tous les fichiers de l'étape 2 |
+| `P2010 … 502` / `no route configured` dans les logs Vercel | `TURSO_DATABASE_URL` incorrecte (espace, `libmysql://`, mauvais nom de base) | Recopie la valeur exacte du tableau Étape 2 |
+| `/api/health` → « jeton refusé » | `TURSO_AUTH_TOKEN` faux ou tronqué | Régénère un token : dashboard Turso → ta base → Connect → copier (bouton) |
+| `/api/health` → « Impossible de joindre le serveur » | URL incomplète | Elle doit contenir `.aws-us-east-1.turso.io` |
+| `{"ok":true}` mais aucune adresse créée | API mail.tm momentanément inaccessible depuis Vercel | Réessaie dans 1 min — la bascule automatique vers mail.gw est intégrée |
+
+> 📌 Le token est **privé** : ne le partage avec personne. S'il fuit, régénère-le
+> (dashboard Turso) et remplace simplement la variable sur Vercel.
 
 ---
 
-## 💰 Après la mise en ligne — rappel des revenus possibles
+## 💰 GOOGLE ADSENSE — état et suite
 
-- **A-ADS** (a-ads.com) : accepte `vercel.app` SANS validation → revenus en
-  Bitcoin, dès le premier visiteur. Je l'intègre pour vous dès que vous me
-  donnez votre URL.
-- **Adsterra / Monetag** : bannières CPM, tolèrent les hébergements gratuits.
-- **Google AdSense** : à faire PLUS TARD avec un domaine à vous (~1–12 €/an)
-  — les sous-domaines gratuits sont refusés par AdSense.
+### ✅ Déjà fait dans le code (4 octobre 2026)
+- Identifiant éditeur **ca-pub-6535203279347573** intégré.
+- Script officiel AdSense présent dans le `<head>` de **toutes les pages**
+  (c'est ce que Google exige pour vérifier un site).
+- **/ads.txt** généré automatiquement : `google.com, pub-6535203279347573, DIRECT, f08c47fec0942fa0`
+- Bandeau cookies RGPD + publicités **non personnalisées** si le visiteur refuse.
+
+### 📋 À faire côté adsense.google.com
+1. **Sites → Ajouter un site** → colle ton URL.
+   ⚠️ **Vérité importante** : Google AdSense refuse la quasi-totalité des sous-domaines
+   gratuits (`vercel.app`) car tu n'en « possèdes » pas le domaine. Deux options :
+   - **Tenter quand même** la validation (gratuit, réponse en 1-14 jours) — le code est
+     déjà parfaitement en place, tu ne perds rien à essayer ;
+   - **Acheter ton propre domaine** (~1-2 €/an en `.xyz`/`.top`) → validation quasi
+     certaine. Il suffira ensuite de : pointer le domaine vers Vercel + changer la
+     variable `NEXT_PUBLIC_SITE_URL`. **Aucune autre modification.**
+2. En attendant, tu peux déjà gagner avec les réseaux qui **acceptent vercel.app** :
+   **A-ADS** (a-ads.com, sans validation) et **Adsterra** → colle leur code dans
+   `src/config/ads.ts` (section `custom` ou `adsterra`).
+3. Une fois validé par Google : crée des blocs « Display » dans la console AdSense,
+   puis colle leurs IDs numériques dans `ads.ts → slots` (top/mid/page/footer).
+   Les **Annonces automatiques** peuvent aussi s'afficher toutes seules.
+
+---
+
+## 🎯 Récapitulatif final
+1. ✅ Base Turso : `tempmail-khaleddey` opérationnelle, tables créées.
+2. ⬜ Uploader les 6 fichiers sur GitHub (Étape 1).
+3. ⬜ Coller les 3 variables sur Vercel + région **iad1** (Étape 2).
+4. ⬜ Redeployer (Étape 3) puis vérifier `/api/health` (Étape 4).
+5. ⬜ Demander la validation AdSense (ou A-ADS en attendant).
